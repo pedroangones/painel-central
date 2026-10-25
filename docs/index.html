@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apuração 2º Turno 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: total do Brasil no topo, depois um bloco por região com suas UFs ordenadas pelo % apurado */
+:root {
+  --bg: #f5f7f4; --panel: #ffffff; --fg: #15201a; --muted: #5d6b62; --line: #dde3dc; --track: #e6ebe5;
+  --norte: #1f8a5b; --nordeste: #d08a12; --centro: #b4532a; --sudeste: #2f62b8; --sul: #6d4bb5; --ext: #5d6b62;
+  --done: #1f8a5b; --warn: #b4532a;
+  --sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1512; --panel: #17201b; --fg: #e7eee9; --muted: #95a39a; --line: #26322b; --track: #24302a;
+    --norte: #3fbf86; --nordeste: #f0ad3a; --centro: #e57a4e; --sudeste: #6e9cf0; --sul: #a487e8; --ext: #95a39a;
+    --done: #3fbf86; --warn: #e57a4e; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--fg); font: 15px/1.45 var(--sans);
+  padding-block: max(16px, env(safe-area-inset-top, 0px)) 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 20px; }
+.num { font-variant-numeric: tabular-nums; }
+header { display: grid; gap: 12px; }
+.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font-size: 20px; font-weight: 600; text-wrap: balance; }
+.hero { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.big { font: 800 clamp(56px, 16vw, 104px)/.9 var(--sans); letter-spacing: -.03em; }
+.big small { font-size: .45em; font-weight: 600; letter-spacing: 0; }
+.hero-meta { display: grid; gap: 2px; color: var(--muted); font-size: 14px; }
+.hero-meta b { color: var(--fg); font-weight: 600; }
+.bar { height: 10px; background: var(--track); border-radius: 5px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--c, var(--fg)); border-radius: inherit; transition: width .6s ease; }
+.bar.thin { height: 6px; }
+.status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font: 13px var(--mono); color: var(--muted); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--done); display: inline-block; margin-right: 6px; vertical-align: 1px; }
+.status.err .dot { background: var(--warn); }
+.status button { font: 600 13px var(--sans); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.status button:focus-visible { outline: 2px solid var(--sudeste); outline-offset: 2px; }
+.regions-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.rs { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 8px; text-decoration: none; color: inherit; }
+.rs .name { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 600; }
+.rs .pct { font: 800 26px/1 var(--sans); }
+.rs .sub { font: 12px var(--mono); color: var(--muted); }
+.regions { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+section.reg { background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--c); border-radius: 8px; padding: 14px 14px 10px; display: grid; gap: 10px; min-width: 0; }
+section.reg h2 { margin: 0; font-size: 17px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+section.reg h2 span { font: 800 22px var(--sans); color: var(--c); }
+.uf { display: grid; grid-template-columns: 2.4em 1fr 4.6em; align-items: center; gap: 10px; padding: 5px 0; border-top: 1px solid var(--line); }
+.uf:first-of-type { border-top: 0; }
+.uf .sig { font: 600 14px var(--mono); }
+.uf .p { text-align: right; font: 600 15px var(--sans); }
+.uf .det { grid-column: 2 / 4; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 11.5px var(--mono); color: var(--muted); margin-top: -4px; }
+.uf.fin .sig::after { content: "✓"; color: var(--done); margin-left: 3px; font-size: 12px; }
+footer { color: var(--muted); font-size: 12.5px; display: grid; gap: 4px; }
+footer a { color: inherit; }
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">TSE · Presidente · 2º turno · 25/10/2026</div>
+    <h1>Seções totalizadas no Brasil</h1>
+    <div class="hero">
+      <div class="big num" id="br-pct">—<small>%</small></div>
+      <div class="hero-meta num">
+        <span><b id="br-st">—</b> de <b id="br-ts">—</b> seções</span>
+        <span>Eleitorado apurado: <b id="br-est">—</b></span>
+      </div>
+    </div>
+    <div class="bar"><i id="br-bar" style="--c: var(--fg)"></i></div>
+    <div class="status" id="status">
+      <span><span class="dot"></span><span id="status-txt">Conectando ao TSE…</span></span>
+      <span id="next"></span>
+      <button type="button" id="refresh">Atualizar agora</button>
+    </div>
+  </header>
+
+  <div class="regions-sum" id="sum"></div>
+  <div class="regions" id="regions"></div>
+
+  <footer>
+    <span>% apurado = seções totalizadas ÷ total de seções. Na região, soma as seções dos estados (não é média simples).</span>
+    <span>Fonte: <a href="https://resultados.tse.jus.br/" target="_blank" rel="noopener">resultados.tse.jus.br</a>, arquivo de abrangência da eleição 6258. A página consulta o TSE a cada 15 s enquanto está aberta.</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const URL_AB = "https://resultados.tse.jus.br/oficial/ele2026/6258/dados/br/br-e006258-ab.json";
+  const INTERVAL = 15;
+  const REGIOES = [
+    { id: "norte", nome: "Norte", c: "var(--norte)", ufs: ["ac","am","ap","pa","ro","rr","to"] },
+    { id: "nordeste", nome: "Nordeste", c: "var(--nordeste)", ufs: ["al","ba","ce","ma","pb","pe","pi","rn","se"] },
+    { id: "centro-oeste", nome: "Centro-Oeste", c: "var(--centro)", ufs: ["df","go","ms","mt"] },
+    { id: "sudeste", nome: "Sudeste", c: "var(--sudeste)", ufs: ["es","mg","rj","sp"] },
+    { id: "sul", nome: "Sul", c: "var(--sul)", ufs: ["pr","rs","sc"] },
+    { id: "exterior", nome: "Exterior", c: "var(--ext)", ufs: ["zz"] },
+  ];
+  const NOMES = { ac:"Acre", al:"Alagoas", am:"Amazonas", ap:"Amapá", ba:"Bahia", ce:"Ceará", df:"Distrito Federal", es:"Espírito Santo", go:"Goiás", ma:"Maranhão", mg:"Minas Gerais", ms:"Mato Grosso do Sul", mt:"Mato Grosso", pa:"Pará", pb:"Paraíba", pe:"Pernambuco", pi:"Piauí", pr:"Paraná", rj:"Rio de Janeiro", rn:"Rio Grande do Norte", ro:"Rondônia", rr:"Roraima", rs:"Rio Grande do Sul", sc:"Santa Catarina", se:"Sergipe", sp:"São Paulo", to:"Tocantins", zz:"Exterior" };
+
+  const $ = (id) => document.getElementById(id);
+  const int = (x) => parseInt(x, 10) || 0;
+  const fmtInt = (n) => n.toLocaleString("pt-BR");
+  const fmtPct = (x) => x.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pct = (a, b) => (b ? (100 * a) / b : 0);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+  let lastIdg = null, left = INTERVAL, busy = false;
+
+  function render(d) {
+    const by = {};
+    for (const a of d.abr) by[a.cdabr] = a;
+
+    const br = by.br;
+    if (br) {
+      const p = pct(int(br.s.st), int(br.s.ts));
+      $("br-pct").firstChild.textContent = fmtPct(p);
+      $("br-st").textContent = fmtInt(int(br.s.st));
+      $("br-ts").textContent = fmtInt(int(br.s.ts));
+      $("br-est").textContent = fmtPct(pct(int(br.e.est), int(br.e.te))) + "%";
+      $("br-bar").style.width = p + "%";
+      document.title = fmtPct(p) + "% · Apuração 2º Turno 2026";
+    }
+
+    const sum = $("sum"), regs = $("regions");
+    sum.replaceChildren(); regs.replaceChildren();
+    for (const r of REGIOES) {
+      const ufs = r.ufs.map((u) => by[u]).filter(Boolean);
+      if (!ufs.length) continue;
+      let st = 0, ts = 0;
+      for (const a of ufs) { st += int(a.s.st); ts += int(a.s.ts); }
+      const p = pct(st, ts);
+
+      const card = el("a", "rs"); card.href = "#" + r.id; card.style.setProperty("--c", r.c);
+      const name = el("div", "name"); name.append(el("span", null, r.nome));
+      card.append(name, el("div", "pct num", fmtPct(p) + "%"));
+      const b = el("div", "bar thin"); const bi = el("i"); bi.style.width = p + "%"; b.append(bi);
+      card.append(b, el("div", "sub num", fmtInt(st) + " / " + fmtInt(ts) + " seções"));
+      sum.append(card);
+
+      const sec = el("section", "reg"); sec.id = r.id; sec.style.setProperty("--c", r.c);
+      const h = el("h2"); h.append(r.nome + " ", el("span", "num", fmtPct(p) + "%"));
+      sec.append(h);
+      ufs.map((a) => ({ a, p: pct(int(a.s.st), int(a.s.ts)) }))
+        .sort((x, y) => y.p - x.p)
+        .forEach(({ a, p }) => {
+          const row = el("div", "uf" + (p >= 100 ? " fin" : ""));
+          row.title = NOMES[a.cdabr] || a.cdabr.toUpperCase();
+          const sb = el("div", "bar thin"); const si = el("i"); si.style.width = p + "%"; sb.append(si);
+          row.append(el("span", "sig", a.cdabr === "zz" ? "EXT" : a.cdabr.toUpperCase()), sb, el("span", "p num", fmtPct(p) + "%"),
+            el("span", "det num", fmtInt(int(a.s.st)) + "/" + fmtInt(int(a.s.ts)) + " seções · eleit. " + fmtPct(pct(int(a.e.est), int(a.e.te))) + "%"));
+          sec.append(row);
+        });
+      regs.append(sec);
+    }
+  }
+
+  function setStatus(txt, err) {
+    $("status").classList.toggle("err", !!err);
+    $("status-txt").textContent = txt;
+  }
+
+  async function load() {
+    if (busy) return;
+    busy = true;
+    try {
+      const res = await fetch(URL_AB, { cache: "no-store" });
+      if (!res.ok) throw new Error(res.status === 429 ? "TSE limitou as consultas (429)" : "TSE respondeu " + res.status);
+      const d = await res.json();
+      if (d.idg !== lastIdg) { render(d); lastIdg = d.idg; }
+      setStatus("TSE atualizou às " + d.hg + " de " + d.dg + " (horário de Brasília)");
+      left = INTERVAL;
+    } catch (e) {
+      setStatus((e && e.message ? e.message : "Falha ao consultar o TSE") + ". Tentando de novo em 5 s.", true);
+      left = 5;
+    } finally {
+      busy = false;
+    }
+  }
+
+  function tick() {
+    if (document.hidden) return;
+    left -= 1;
+    $("next").textContent = "próxima consulta em " + Math.max(left, 0) + " s";
+    if (left <= 0) load();
+  }
+
+  $("refresh").addEventListener("click", load);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+  load();
+  setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
